@@ -1,0 +1,250 @@
+import 'dart:convert';
+import 'dart:developer' as developer;
+
+import 'package:http/http.dart' as http;
+
+import '../config/api_config.dart';
+
+class ApiService {
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+  ApiService._internal();
+
+  Future<Map<String, dynamic>> fetchNDVI(
+    double latitude,
+    double longitude, {
+    List<List<double>>? polygon,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConfig.getNdviUrl()),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'latitude': latitude,
+          'longitude': longitude,
+          'polygon': polygon,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to fetch NDVI: ${response.statusCode}');
+      }
+    } catch (e) {
+      developer.log(
+        'Error fetching NDVI',
+        name: 'ApiService.fetchNDVI',
+        error: e,
+      );
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchWeather(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConfig.getWeatherUrl()),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'latitude': latitude,
+          'longitude': longitude,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to fetch weather: ${response.statusCode}');
+      }
+    } catch (e) {
+      developer.log(
+        'Error fetching weather',
+        name: 'ApiService.fetchWeather',
+        error: e,
+      );
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getCropHealth(
+    double latitude,
+    double longitude, {
+    String? cropType,
+    String? imageData,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConfig.getCropHealthUrl()),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'latitude': latitude,
+          'longitude': longitude,
+          'crop_type': cropType,
+          'image_data': imageData,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to get crop health: ${response.statusCode}');
+      }
+    } catch (e) {
+      developer.log(
+        'Error getting crop health',
+        name: 'ApiService.getCropHealth',
+        error: e,
+      );
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getAdvisory({
+    required double latitude,
+    required double longitude,
+    String? cropType,
+    String? fieldSize,
+    String? season,
+    double? ndviScore,
+    Map<String, dynamic>? weatherData,
+    List<List<double>>? polygon,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConfig.getAdvisoryUrl()),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'location': {
+            'latitude': latitude,
+            'longitude': longitude,
+            'polygon': polygon,
+          },
+          'crop_type': cropType,
+          'field_size': fieldSize,
+          'season': season,
+          'ndvi_score': ndviScore,
+          'weather_data': weatherData,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to get advisory: ${response.statusCode}');
+      }
+    } catch (e) {
+      developer.log(
+        'Error getting advisory',
+        name: 'ApiService.getAdvisory',
+        error: e,
+      );
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getFullReport({
+    required double latitude,
+    required double longitude,
+    String? cropType,
+    String? fieldSize,
+    String? season,
+    List<List<double>>? polygon,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConfig.getFullReportUrl()),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'location': {
+            'latitude': latitude,
+            'longitude': longitude,
+            'polygon': polygon,
+          },
+          'crop_type': cropType,
+          'field_size': fieldSize,
+          'season': season,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to get full report: ${response.statusCode}');
+      }
+    } catch (e) {
+      developer.log(
+        'Error getting full report',
+        name: 'ApiService.getFullReport',
+        error: e,
+      );
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> detectDisease({
+    required String imageData, // Base64 encoded
+    double? latitude,
+    double? longitude,
+    String? cropType,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/api/disease-detection'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'image_data': imageData,
+          'latitude': latitude,
+          'longitude': longitude,
+          'crop_type': cropType,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to detect disease: ${response.statusCode}');
+      }
+    } catch (e) {
+      developer.log(
+        'Error detecting disease',
+        name: 'ApiService.detectDisease',
+        error: e,
+      );
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> getPestRisk(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/api/pest-risk'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'latitude': latitude,
+          'longitude': longitude,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to get pest risk: ${response.statusCode}');
+      }
+    } catch (e) {
+      developer.log(
+        'Error getting pest risk',
+        name: 'ApiService.getPestRisk',
+        error: e,
+      );
+      rethrow;
+    }
+  }
+}
+
